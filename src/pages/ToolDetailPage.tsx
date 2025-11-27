@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from "@/components/ui/input"
 import { TOOLS } from '@/data/tools'
 import { DEFAULT_RESUME, DEFAULT_PROMPT } from '@/data/defaults'
+import { useJobAnalyzer } from '@/hooks/useJobAnalyzer'
 import { ChatMessage } from '@/components/tools/ChatMessage'
 import { ResumePanel } from '@/components/tools/ResumePanel'
 import { PromptPanel } from '@/components/tools/PromptPanel'
@@ -41,6 +42,7 @@ export default function ToolDetailPage() {
    const [prompt, setPrompt] = useState(DEFAULT_PROMPT)
    const [isResumePanelOpen, setIsResumePanelOpen] = useState(false)
    const [isPromptPanelOpen, setIsPromptPanelOpen] = useState(false)
+   const { analyzeJob, loading, error: aiError } = useJobAnalyzer({ resume, prompt })
    const [messages, setMessages] = useState<Message[]>([
       {
          id: 1,
@@ -49,7 +51,6 @@ export default function ToolDetailPage() {
       }
    ])
    const [input, setInput] = useState("")
-   const [showWelcome, setShowWelcome] = useState(true)
    const messagesEndRef = useRef<HTMLDivElement>(null)
 
    const scrollToBottom = () => {
@@ -60,7 +61,7 @@ export default function ToolDetailPage() {
       scrollToBottom()
    }, [messages])
 
-   const handleSend = () => {
+   const handleSend = async () => {
       if (!input.trim()) return
 
       if (!resume.trim()) {
@@ -82,32 +83,29 @@ export default function ToolDetailPage() {
          return
       }
 
-      // Add user message
+      // Add user message to chat
       const userMessage: Message = {
          id: Date.now(),
          type: "user",
          content: input
       }
 
-      // Generate mock results
-      const mockResults = {
-         matchScore: Math.floor(Math.random() * 25) + 70,
-         compatibility: Math.floor(Math.random() * 30) + 65,
-         skillsMatch: Math.floor(Math.random() * 25) + 70,
-         experienceMatch: Math.floor(Math.random() * 30) + 60
-      }
-
-      // Add bot response with results
-      const botMessage: Message = {
-         id: Date.now() + 1,
-         type: "bot",
-         content: "I've analyzed the job description against your resume. Here are the key compatibility metrics:",
-         results: mockResults
-      }
-
-      setMessages([...messages, userMessage, botMessage])
+      setMessages([...messages, userMessage])
       setInput("")
-      setShowWelcome(false)
+
+      // Analyze with OpenAI
+      const botResponse = await analyzeJob(input)
+
+      if (botResponse) {
+         setMessages(prev => [...prev, botResponse])
+      } else if (aiError) {
+         const errorMessage: Message = {
+            id: Date.now(),
+            type: "bot",
+            content: `Error analyzing job description: ${aiError}`
+         }
+         setMessages(prev => [...prev, errorMessage])
+      }
    }
 
    const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -157,7 +155,6 @@ export default function ToolDetailPage() {
                         key={message.id}
                         type={message.type}
                         content={message.content}
-                        results={message.results}
                      />
                   ))}
                   <div ref={messagesEndRef} />
@@ -173,11 +170,21 @@ export default function ToolDetailPage() {
                            value={input}
                            onChange={(e) => setInput(e.target.value)}
                            onKeyPress={handleKeyPress}
+                           disabled={loading}
                         />
                      </div>
-                     <Button onClick={handleSend} size="sm" className="gap-2">
-                        <i className="bi bi-send"></i>
-                        <span>Send</span>
+                     <Button onClick={handleSend} size="sm" className="gap-2" disabled={loading}>
+                        {loading ? (
+                           <>
+                              <i className="bi bi-hourglass-split animate-spin"></i>
+                              <span>Analyzing...</span>
+                           </>
+                        ) : (
+                           <>
+                              <i className="bi bi-send"></i>
+                              <span>Send</span>
+                           </>
+                        )}
                      </Button>
                   </div>
                </div>
