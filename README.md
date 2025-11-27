@@ -1,6 +1,6 @@
 # Promptsikho Tools
 
-A minimal React 19 project with Vite, TypeScript, Tailwind CSS, and shadcn/ui components.
+A simple React 19 + Vite + TypeScript project with routing and shadcn components.
 
 ## Quick Start
 
@@ -18,6 +18,19 @@ npm run build
 npm run preview
 ```
 
+## Project Structure
+
+```
+src/
+├── components/ui/     # shadcn components
+├── pages/             # Page components
+├── App.tsx            # Routing setup
+├── main.tsx           # Entry point
+└── index.css          # Styles
+```
+
+See `STRUCTURE.md` for how to add routes and components.
+
 ## Tech Stack
 
 - React 19
@@ -25,11 +38,15 @@ npm run preview
 - TypeScript
 - Tailwind CSS
 - shadcn/ui
+- React Router
 
-## Add More Components
+## Adding Routes
 
-```bash
-npx shadcn-ui@latest add <component-name>
-```
+1. Create a new page in `src/pages/`
+2. Add route in `src/App.tsx`
 
-Example: `npx shadcn-ui@latest add input`
+## Adding Components
+
+Create components in `src/components/` and import where needed.
+
+Done! 🚀

@@ -9,3 +9,14 @@ export {
   CardDescription,
   CardContent,
 } from './card'
+
+export {
+  NavigationMenu,
+  NavigationMenuList,
+  NavigationMenuItem,
+  NavigationMenuContent,
+  NavigationMenuTrigger,
+  NavigationMenuLink,
+  NavigationMenuViewport,
+  navigationMenuTriggerStyle,
+} from './navigation-menu'
