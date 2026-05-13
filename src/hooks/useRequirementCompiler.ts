@@ -64,10 +64,10 @@ Output Format Rules:
 - generate prompts developers can paste into Copilot Chat or Cursor AI
 
 Clarification Rules:
-- ask clarification questions when ambiguity exists
-- do not generate output unless sufficiently confident
-- ask clarification when screenshot intent is unclear
-- ask users to split oversized requests into smaller scopes
+- DO NOT ask clarification questions
+- Generate output with confidence using best inference
+- Infer intent from screenshots and context
+- If request is oversized, still generate but note the concern in output
 
 Implementation Rules:
 - enforce production-ready implementation behavior
@@ -84,6 +84,13 @@ Content Preservation Rules:
 - preserve HTML formatting
 - preserve JSON structures
 - never paraphrase content unless explicitly requested
+
+Final Generation Rules:
+- CRITICAL: Once you have clarifications (Q&A provided), DO NOT ask for more information
+- Use the clarifications as additional context and generate the FINAL complete prompt
+- Generate production-ready prompts that developers can immediately paste into Copilot
+- Include all necessary details, constraints, and requirements in ONE comprehensive prompt
+- Do not request additional information in the output
 
 Preferred Output Structure:
 
@@ -260,30 +267,59 @@ export function useRequirementCompiler({
         return [];
       }
 
-      // Quick check to see if clarifications are needed
+      // Build clarification detection message with images
+      const contentParts: any[] = [
+        {
+          type: "text",
+          text: `You are a requirements analyst. Analyze the given requirements and screenshots.
+
+Respond with a JSON array of AT MOST 5 most critical clarification questions that are essential to understand the requirement.
+If the requirement is mostly clear, respond with 2-3 questions. If very clear, respond with fewer or empty array.
+
+Return ONLY valid JSON array of question strings, nothing else.
+
+Requirements:
+${text}`,
+        },
+      ];
+
+      // Include images in clarification analysis
+      if (files && files.length > 0) {
+        console.log("🖼️ Including images in clarification analysis");
+        for (const file of files) {
+          const base64 = await fileToBase64(file);
+          contentParts.push({
+            type: "image_url",
+            image_url: {
+              url: base64,
+            },
+          });
+        }
+      }
+
       const response = await openai.chat.completions.create({
         model,
         messages: [
           {
             role: "system",
             content:
-              "You are a requirements analyst. Analyze the given requirements and respond with a JSON array of clarification questions needed (or empty array if none needed). Return ONLY valid JSON, nothing else.",
+              "You are a requirements analyst. Generate only the MOST CRITICAL clarification questions (3-5 max). Return ONLY valid JSON array, nothing else.",
           },
           {
             role: "user",
-            content: `Requirements:\n${text}\n\nRespond with a JSON array of clarification questions as strings, or [] if no clarifications needed.`,
+            content: contentParts,
           },
         ],
-        max_completion_tokens: 500,
-        temperature: 0.3,
+        max_completion_tokens: 400,
+        temperature: 0.2,
       });
 
       const content = response.choices[0]?.message?.content || "[]";
       console.log("📋 Clarification response:", content.substring(0, 100));
       try {
         const parsed = JSON.parse(content);
-        const cqs = Array.isArray(parsed) ? parsed : [];
-        console.log("✅ Detected", cqs.length, "clarification questions");
+        const cqs = Array.isArray(parsed) ? parsed.slice(0, 5) : []; // Limit to 5 max
+        console.log("✅ Detected", cqs.length, "critical clarification questions");
         setClarifications(cqs);
         return cqs;
       } catch {

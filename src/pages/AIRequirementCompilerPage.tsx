@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { RequirementInputPanel } from '@/components/tools/RequirementInputPanel'
 import PromptOutputPanel from '@/components/tools/PromptOutputPanel'
 import { Card } from '@/components/ui/card'
@@ -12,7 +12,7 @@ export default function AIRequirementCompilerPage() {
   const [clarifications, setClarifications] = useState<string[]>([])
   const [clarAnswers, setClarAnswers] = useState<Record<number,string>>({})
   const [output, setOutput] = useState('')
-  const { compileRequirements, detectClarifications, loading: aiLoading, error: aiError, output: aiOutput } = useRequirementCompiler({
+  const { compileRequirements, detectClarifications, loading: aiLoading, error: aiError } = useRequirementCompiler({
     requirementText: input,
     files,
   })
@@ -82,13 +82,6 @@ export default function AIRequirementCompilerPage() {
     }
   }
 
-  const handleSkipClarifications = () => {
-    console.log('⏭️  Skipping clarifications, proceeding with generation')
-    setState('idle')
-    setClarifications([])
-    setClarAnswers({})
-  }
-
   const handleFilesChange = (fs: File[]) => {
     setFiles(fs)
   }
@@ -99,7 +92,6 @@ export default function AIRequirementCompilerPage() {
 
   // If clarifications answered, allow generation
   const resolvedAll = clarifications.length > 0 && clarifications.every((_, i) => clarAnswers[i] && clarAnswers[i].trim().length > 0)
-  const readyToGenerate = state !== 'generating' && (state === 'idle' || (state === 'clarification-required' && resolvedAll))
 
   return (
     <div className="space-y-6">
@@ -114,7 +106,7 @@ export default function AIRequirementCompilerPage() {
           onChange={setInput}
           files={files}
           onFilesChange={handleFilesChange}
-          onGenerate={handleGenerate}
+          onGenerate={state === 'clarification-required' && resolvedAll ? handleConfirmClarifications : handleGenerate}
           state={state}
           clarificationQuestions={clarifications}
           onAnswerClarification={handleAnswerClarification}

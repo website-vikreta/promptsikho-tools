@@ -17,52 +17,53 @@ export default function App() {
     <Router>
       <div className="min-h-screen flex flex-col bg-background">
         <nav className="bg-card flex border-b p-4 relative z-50">
-          <div className="flex items-center w-full px-6">
-            <Link to="/" >
-              <h1 className="text-xl font-semibold ">
-                <span className="font-black">Prompt</span>
-                <span className="font-semibold">Sikho</span>
-              </h1>
-            </Link>
-            <div className="lg:!flex lg:flex-auto lg:ml-12 max-lg:hidden max-lg:before:fixed max-lg:before:bg-black max-lg:before:opacity-50 max-lg:before:inset-0 max-lg:before:z-50">
-              <div className="lg:!flex lg:flex-auto max-lg:fixed max-lg:bg-white max-lg:w-1/2 max-lg:min-w-[300px] max-lg:top-0 max-lg:left-0 max-lg:p-6 max-lg:h-full max-lg:shadow-md max-lg:overflow-auto z-50">
+          <div className="w-full max-w-6xl mx-auto">
+            <div className="flex items-center w-full px-4">
+              <Link to="/" >
+                <h1 className="text-xl font-semibold ">
+                  <span className="font-black">Prompt</span>
+                  <span className="font-semibold">Sikho</span>
+                </h1>
+              </Link>
+              <div className="lg:!flex lg:flex-auto lg:ml-12 max-lg:hidden max-lg:before:fixed max-lg:before:bg-black max-lg:before:opacity-50 max-lg:before:inset-0 max-lg:before:z-50">
+                <div className="lg:!flex lg:flex-auto max-lg:fixed max-lg:bg-white max-lg:w-1/2 max-lg:min-w-[300px] max-lg:top-0 max-lg:left-0 max-lg:p-6 max-lg:h-full max-lg:shadow-md max-lg:overflow-auto z-50">
+                  <NavigationMenu>
+                    <NavigationMenuList >
+                      <NavigationMenuItem>
+                        <Link to="/" className={navigationMenuTriggerStyle()}>
+                          Home
+                        </Link>
+                      </NavigationMenuItem>
+                      <NavigationMenuItem>
+                        <Link
+                          to="/tools"
+                          className={navigationMenuTriggerStyle()}
+                        >
+                          Tools
+                        </Link>
+                      </NavigationMenuItem>
+                    </NavigationMenuList>
+                  </NavigationMenu>
+                </div>
+              </div>
+              <div className="flex items-center ml-auto justify-end">
                 <NavigationMenu>
-                  <NavigationMenuList >
+                  <NavigationMenuList>
                     <NavigationMenuItem>
                       <Link to="/" className={navigationMenuTriggerStyle()}>
-                        Home
-                      </Link>
-                    </NavigationMenuItem>
-                    <NavigationMenuItem>
-                      <Link
-                        to="/tools"
-                        className={navigationMenuTriggerStyle()}
-                      >
-                        Tools
+                        Login
                       </Link>
                     </NavigationMenuItem>
                   </NavigationMenuList>
                 </NavigationMenu>
+                <Button
+                  variant="outline"
+                  className="lg:hidden h-10 w-10 p-0 rounded-md"
+                  aria-label="Open menu"
+                >
+                  <i className="bi bi-list text-lg" />
+                </Button>
               </div>
-            </div>
-            <div className="flex items-center ml-auto justify-end">
-              <NavigationMenu>
-                <NavigationMenuList>
-                  <NavigationMenuItem>
-                    <Link to="/" className={navigationMenuTriggerStyle()}>
-                      Login
-                    </Link>
-                  </NavigationMenuItem>
-                </NavigationMenuList>
-              </NavigationMenu>
-
-              <Button
-                variant="outline"
-                className="lg:hidden h-10 w-10 p-0 rounded-md"
-                aria-label="Open menu"
-              >
-                <i className="bi bi-list text-lg" />
-              </Button>
             </div>
           </div>
         </nav>

@@ -15,7 +15,7 @@ interface RequirementInputPanelProps {
   onFilesChange: (files: File[]) => void;
   files: File[];
   onGenerate: () => void;
-  state: "idle" | "uploading" | "generating" | "clarification-required";
+  state: "idle" | "uploading" | "generating" | "clarification-required" | "oversized-warning" | "failed";
   clarificationQuestions: string[];
   onAnswerClarification: (index: number, answer: string) => void;
 }
@@ -264,6 +264,11 @@ ${
                 <i className="bi bi-hourglass-split animate-spin" />{" "}
                 <span>Generating...</span>
               </>
+            ) : state === "clarification-required" ? (
+              <div className="flex items-center gap-2">
+                <i className="bi bi-check-circle" />
+                <span>Confirm & Generate Prompt</span>
+              </div>
             ) : (
               <div className="flex items-center gap-2">
                 <i className="bi bi-stars" />
