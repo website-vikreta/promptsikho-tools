@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
 import HomePage from '@/pages/HomePage'
 import ToolsPage from '@/pages/ToolsPage'
 import ToolDetailPage from '@/pages/ToolDetailPage'
+import AIRequirementCompilerPage from '@/pages/AIRequirementCompilerPage'
 import {
    NavigationMenu,
    NavigationMenuList,
@@ -53,15 +54,16 @@ export default function App() {
                   </div>
                </div>
             </nav>
-            <main className="flex-1 max-w-4xl mx-auto w-full py-8 px-4">
+            <main className="flex-1 flex flex-col max-w-6xl mx-auto w-full py-8 px-4 min-h-0">
                <Routes>
                   <Route path="/" element={<HomePage />} />
                   <Route path="/tools" element={<ToolsPage />} />
+                  <Route path="/tools/ai-req-compiler" element={<AIRequirementCompilerPage />} />
                   <Route path="/tools/:toolId" element={<ToolDetailPage />} />
                </Routes>
             </main>
             <footer className="bg-card border-t p-4 text-center text-sm text-muted-foreground">
-               © 2025 <span className='font-black'>Prompt</span><span className='font-semibold'>Sikho</span>
+               © 2025-26 <span className='font-black'>Prompt</span><span className='font-semibold'>Sikho</span>
             </footer>
          </div>
       </Router>

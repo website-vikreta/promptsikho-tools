@@ -1,31 +1,41 @@
+
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Link } from 'react-router-dom'
-import { TOOLS } from '@/data/tools'
 
 export default function HomePage() {
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold">Tools</h1>
-        <p className="text-sm text-muted-foreground">Explore our collection of powerful tools</p>
+    <div className="flex flex-col items-center justify-center text-center min-h-[70vh] px-4">
+
+      <div className="max-w-3xl space-y-6">
+
+        <div className="space-y-3">
+          <h1 className="text-5xl md:text-6xl font-black tracking-tight">
+            Prompt<span className="font-semibold">Sikho</span>
+          </h1>
+
+          <p className="text-lg text-muted-foreground">
+            Transform raw ideas, screenshots, and feature requirements
+            into production-ready AI prompts for GitHub Copilot,
+            ChatGPT, Claude, and more.
+          </p>
+        </div>
+
+        <div className="flex items-center justify-center gap-4 flex-wrap">
+          
+          <Link to="/tools">
+            <Button size="lg">
+              Explore Tools
+            </Button>
+          </Link>
+
+          <Button variant="outline" size="lg">
+            Learn More
+          </Button>
+
+        </div>
+
       </div>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {TOOLS.map(tool => (
-          <Card key={tool.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <CardTitle>{tool.name}</CardTitle>
-              <CardDescription>{tool.desc}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Link to={`/tools/${tool.id}`}>
-                <Button className="w-full">View Details</Button>
-              </Link>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
     </div>
   )
 }

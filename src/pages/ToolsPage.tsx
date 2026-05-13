@@ -20,7 +20,7 @@ export default function ToolsPage() {
             </CardHeader>
             <CardContent>
               <Link to={`/tools/${tool.id}`}>
-                <Button className="w-full">View Details</Button>
+                <Button className="w-full">Try it</Button>
               </Link>
             </CardContent>
           </Card>
