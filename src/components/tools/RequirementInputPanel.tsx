@@ -33,6 +33,8 @@ export function RequirementInputPanel({
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
   const [uploadError, setUploadError] = React.useState<string | null>(null);
   const [uploading, setUploading] = React.useState(false);
+  const [isDragging, setIsDragging] = React.useState(false);
+  const [previewImage, setPreviewImage] = React.useState<string | null>(null);
 
   const handleFiles = (fileList?: FileList | null) => {
     if (!fileList) return;
@@ -80,15 +82,88 @@ export function RequirementInputPanel({
           />
 
           <div
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={handleDrop}
-            className="border border-dashed rounded-md p-3 flex flex-col gap-3"
+            onDragOver={(e) => {
+              e.preventDefault();
+              setIsDragging(true);
+            }}
+            onDragLeave={() => {
+              setIsDragging(false);
+            }}
+            onDrop={(e) => {
+              setIsDragging(false);
+              handleDrop(e);
+            }}
+            className={`
+relative overflow-hidden border-2 border-dashed rounded-2xl
+p-6 min-h-[260px]
+flex flex-col justify-center gap-4
+transition-all duration-300 ease-in-out
+
+${
+  isDragging
+    ? "scale-[1.02] bg-gray-100 border-violet-400 shadow-[0_0_50px_rgba(139,92,246,0.35)]"
+    : "bg-white border-gray-200"
+}
+`}
             aria-label="Upload screenshots or files"
           >
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
-                Upload screenshots (drag & drop supported)
-              </p>
+            {isDragging && (
+              <>
+                {/* Glow Overlay */}
+                <div className="absolute inset-0 bg-violet-500/5 pointer-events-none" />
+
+                {/* Scanning Line */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                  <div className="absolute top-0 left-0 w-full h-16 bg-gradient-to-b from-violet-400/30 to-transparent animate-[scan_2s_linear_infinite]" />
+                </div>
+              </>
+            )}
+            <div className="flex flex-col items-center justify-center text-center gap-4">
+              {/* AI Icon */}
+              <div
+                className={`
+      w-16 h-16 rounded-2xl flex items-center justify-center
+      transition-all duration-300 animate-[float_3s_ease-in-out_infinite]
+      ${isDragging ? "bg-violet-100 scale-110" : "bg-slate-100"}
+    `}
+              >
+                <i
+                  className={`
+        bi bi-stars text-2xl transition-all duration-300
+        ${isDragging ? "text-violet-600 animate-pulse" : "text-slate-500"}
+      `}
+                />
+              </div>
+
+              {/* Upload Text */}
+              <div className="space-y-1">
+                <p className="text-base font-semibold">
+                  {isDragging
+                    ? "✨ AI analyzing screenshots..."
+                    : "Upload screenshots"}
+                </p>
+
+                <p className="text-sm text-muted-foreground">
+                  Drag & drop UI screenshots, wireframes, or designs
+                </p>
+              </div>
+
+              {/* Upload Chips */}
+              <div className="flex flex-wrap justify-center gap-2">
+                <span className="text-xs px-2 py-1 rounded-full bg-slate-100">
+                  UI Screenshots
+                </span>
+
+                <span className="text-xs px-2 py-1 rounded-full bg-slate-100">
+                  Wireframes
+                </span>
+
+                <span className="text-xs px-2 py-1 rounded-full bg-slate-100">
+                  Figma Exports
+                </span>
+              </div>
+
+              {/* Upload Button */}
               <div>
                 <input
                   ref={fileInputRef}
@@ -98,18 +173,20 @@ export function RequirementInputPanel({
                   onChange={(e) => handleFiles(e.target.files)}
                   className="hidden"
                 />
+
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  Upload
+                  Upload Files
                 </Button>
               </div>
             </div>
             {uploading && (
-              <div className="text-sm text-muted-foreground">
-                Processing uploads...
+              <div className="flex items-center justify-center gap-2 text-sm text-violet-600 font-medium">
+                <i className="bi bi-stars animate-pulse" />
+                <span>AI processing screenshots...</span>
               </div>
             )}
 
@@ -118,16 +195,17 @@ export function RequirementInputPanel({
             )}
 
             {files && files.length > 0 && (
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {files.map((f, i) => (
                   <div
                     key={i}
-                    className="relative border rounded overflow-hidden group"
+                    className="relative border rounded-xl overflow-hidden group bg-white shadow-sm hover:shadow-lg transition-all duration-300"
                   >
                     <img
                       src={URL.createObjectURL(f)}
                       alt={f.name}
-                      className="w-full h-24 object-cover"
+                      onClick={() => setPreviewImage(URL.createObjectURL(f))}
+                      className="w-full h-40 object-cover rounded-xl cursor-pointer hover:scale-[1.03] hover:shadow-xl transition-all duration-300"
                     />
 
                     <p className="text-xs p-1 truncate">{f.name}</p>
@@ -187,13 +265,38 @@ export function RequirementInputPanel({
                 <span>Generating...</span>
               </>
             ) : (
-              <>
-                <i className="bi bi-robot" /> <span>Generate Prompt</span>
-              </>
+              <div className="flex items-center gap-2">
+                <i className="bi bi-stars" />
+                <span>Generate Prompt</span>
+              </div>
             )}
           </Button>
         </div>
       </CardFooter>
+      {previewImage && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-6 animate-in fade-in duration-200"
+          onClick={() => setPreviewImage(null)}
+        >
+          <div
+            className="relative max-w-5xl max-h-[90vh] animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={previewImage}
+              alt="Preview"
+              className="max-w-full max-h-[90vh] rounded-xl shadow-2xl"
+            />
+
+            <button
+              className="absolute top-3 right-3 bg-black/70 text-white w-10 h-10 rounded-full"
+              onClick={() => setPreviewImage(null)}
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
     </Card>
   );
 }

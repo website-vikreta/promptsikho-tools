@@ -121,33 +121,7 @@ export default function AIRequirementCompilerPage() {
         />
 
         <div className="flex flex-col h-full min-h-0 overflow-hidden">
-          {/* {state === 'clarification-required' && (
-            <Card className="p-4 border-blue-200 bg-blue-50">
-              <h3 className="font-semibold mb-3">Clarifications Needed</h3>
-              <p className="text-xs text-muted-foreground mb-4">Answer these questions to generate a more accurate prompt.</p>
-              <div className="space-y-3">
-                {clarifications.map((q, idx) => (
-                  <div key={idx}>
-                    <p className="text-sm font-medium mb-1">{q}</p>
-                    <input
-                      type="text"
-                      value={clarAnswers[idx] || ''}
-                      onChange={(e) => setClarAnswers(prev => ({ ...prev, [idx]: e.target.value }))}
-                      placeholder="Your answer..."
-                      className="w-full px-3 py-2 border rounded text-sm"
-                    />
-                  </div>
-                ))}
-              </div>
-              <div className="mt-4 flex gap-2">
-                <Button variant="outline" size="sm" onClick={handleSkipClarifications}>Skip</Button>
-                <Button size="sm" onClick={handleConfirmClarifications} disabled={aiLoading}>
-                  {aiLoading ? 'Generating...' : 'Generate with Answers'}
-                </Button>
-              </div>
-            </Card>
-          )} */}
-
+          
           {state === 'oversized-warning' && (
             <Card className="p-4 border-yellow-200 bg-yellow-50">
               <h3 className="font-semibold text-yellow-900">Scope Too Large</h3>
