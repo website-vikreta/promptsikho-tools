@@ -260,10 +260,10 @@ ${
             disabled={state === "generating" || state === "uploading"}
           >
             {state === "generating" ? (
-              <>
+              <div className="flex items-center gap-2">
                 <i className="bi bi-hourglass-split animate-spin" />{" "}
                 <span>Generating...</span>
-              </>
+              </div>
             ) : state === "clarification-required" ? (
               <div className="flex items-center gap-2">
                 <i className="bi bi-check-circle" />

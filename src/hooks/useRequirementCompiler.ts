@@ -12,7 +12,10 @@ interface ClarificationQA {
 }
 
 const apiKey = (import.meta as any).env.VITE_OPENAI_API_KEY;
-const model = (import.meta as any).env.VITE_OPENAI_MODEL || "gpt-4o-mini";
+const generationModel =
+  (import.meta as any).env.VITE_OPENAI_MODEL || "gpt-4o-mini";
+
+const clarificationModel = "gpt-4o";
 
 const openai = new OpenAI({
   apiKey: apiKey,
@@ -27,6 +30,12 @@ Your responsibility is converting:
 - fragmented requirements
 - feature requests
 - content dumps
+
+If screenshots are NOT provided:
+- do not reference screenshots
+- do not assume visual layouts
+- do not hallucinate UI structure
+- generate prompts strictly from textual requirements
 
 into:
 - structured implementation prompts
@@ -64,10 +73,16 @@ Output Format Rules:
 - generate prompts developers can paste into Copilot Chat or Cursor AI
 
 Clarification Rules:
-- DO NOT ask clarification questions
-- Generate output with confidence using best inference
-- Infer intent from screenshots and context
-- If request is oversized, still generate but note the concern in output
+- Ask clarification questions ONLY if essential implementation details are missing
+- Ask concise, implementation-focused questions
+- Avoid generic or obvious questions
+- Avoid repeating information already visible in screenshots or requirements
+- Prefer intelligent inference whenever possible
+- Ask only questions that materially improve implementation quality
+- Group related ambiguities into fewer precise questions
+- If requirements are sufficiently clear, generate output directly
+- Once clarification answers are provided, NEVER ask additional questions
+- Use screenshots heavily to reduce clarification needs
 
 Implementation Rules:
 - enforce production-ready implementation behavior
@@ -149,7 +164,7 @@ export function useRequirementCompiler({
 
       console.log("🚀 compileRequirements called");
       console.log("API Key configured:", !!apiKey);
-      console.log("Model:", model);
+      console.log("Model:", generationModel);
 
       if (!apiKey || apiKey.trim() === "") {
         const noKeyError =
@@ -171,11 +186,25 @@ export function useRequirementCompiler({
           - Claude
           - ChatGPT
 
-          Analyze uploaded screenshots carefully and convert the UI into implementation instructions rather than code.
 
           Requirements:
           ${requirementText}
           `;
+
+      if (files && files.length > 0) {
+        textContent += `
+
+Analyze uploaded screenshots carefully and convert the UI into implementation instructions rather than code.
+
+Focus on:
+- layout hierarchy
+- spacing
+- responsiveness
+- interactions
+- visual structure
+- reusable UI patterns
+`;
+      }
 
       if (clarificationAnswers && clarificationAnswers.length > 0) {
         textContent += `\n\nClarifications from user:\n`;
@@ -183,6 +212,15 @@ export function useRequirementCompiler({
         clarificationAnswers.forEach((qa, idx) => {
           textContent += `Q${idx + 1}: ${qa.question}\nA: ${qa.answer}\n`;
         });
+
+        textContent += `
+
+Generate the FINAL implementation prompt using the provided clarification answers.
+
+Do NOT ask additional questions.
+Do NOT request more information.
+Generate the complete final prompt directly.
+`;
       }
 
       const contentParts: any[] = [
@@ -212,7 +250,7 @@ export function useRequirementCompiler({
 
       // Call OpenAI with streaming or regular completion
       const response = await openai.chat.completions.create({
-        model,
+        model: generationModel,
         messages: [
           {
             role: "system",
@@ -224,7 +262,7 @@ export function useRequirementCompiler({
           },
         ],
         max_completion_tokens: 4000,
-        temperature: 0.3,
+        temperature: 0.15,
         top_p: 1,
         frequency_penalty: 0,
         presence_penalty: 0,
@@ -271,12 +309,90 @@ export function useRequirementCompiler({
       const contentParts: any[] = [
         {
           type: "text",
-          text: `You are a requirements analyst. Analyze the given requirements and screenshots.
+          text: `You are evaluating whether the provided requirements are implementation-ready for an AI coding agent.
 
-Respond with a JSON array of AT MOST 5 most critical clarification questions that are essential to understand the requirement.
-If the requirement is mostly clear, respond with 2-3 questions. If very clear, respond with fewer or empty array.
+Your job is NOT to generate the solution.
 
-Return ONLY valid JSON array of question strings, nothing else.
+Your job is ONLY to determine whether important implementation details are missing.
+
+Analyze:
+- requirements
+- screenshots
+- flows
+- business logic
+- integrations
+- user interactions
+- permissions
+- responsiveness
+- edge cases
+- navigation
+- states
+- APIs
+- data handling
+
+Before deciding:
+- mentally evaluate implementation readiness from 1-10
+- if readiness is below 8/10, ask clarification questions
+- if readiness is 8+/10, return []
+
+IMPORTANT:
+If the request is short, vague, or missing feature-specific details, you MUST ask clarification questions.
+
+Examples requiring clarification:
+- "build navbar"
+- "create dashboard"
+- "make landing page"
+- "build admin panel"
+- "create authentication page"
+
+For UI-related requests, clarify:
+- navigation items
+- CTA buttons
+- responsiveness
+- authentication behavior
+- mobile/hamburger behavior
+- dropdowns
+- interactions
+- sections
+- routing/navigation behavior
+- animations
+- forms/search behavior
+
+For common UI components like navbars, dashboards, landing pages, forms, or admin panels:
+- verify important sections and interactions are defined
+- ask about missing component behavior
+- ask about responsiveness when not specified
+- ask about navigation structure when unclear
+
+Ask clarification questions ONLY when missing information would realistically block or significantly affect implementation quality.
+
+Examples of GOOD clarification areas:
+- authentication flow unclear
+- missing dashboard behavior
+- unclear navigation behavior
+- unclear API/data handling
+- unclear responsive behavior
+- unclear user roles/permissions
+- unclear form submission logic
+- unclear CRUD operations
+- unclear realtime behavior
+- unclear integrations
+
+Examples of BAD clarification areas:
+- asking color preferences
+- asking obvious screenshot details
+- asking styling preferences
+- asking things inferable from UI
+- asking unnecessary implementation choices
+
+Rules:
+- ask concise implementation-focused questions
+- ask only high-value questions
+- combine related ambiguities
+- return [] ONLY when feature scope, interactions, behavior, and implementation expectations are sufficiently clear
+- ask clarification questions if important feature details are missing even when partial implementation is technically possible
+
+Return ONLY a valid JSON array of question strings.
 
 Requirements:
 ${text}`,
@@ -298,12 +414,34 @@ ${text}`,
       }
 
       const response = await openai.chat.completions.create({
-        model,
+        model: clarificationModel,
         messages: [
           {
             role: "system",
-            content:
-              "You are a requirements analyst. Generate only the MOST CRITICAL clarification questions (3-5 max). Return ONLY valid JSON array, nothing else.",
+            content: `
+You are a senior product analyst and AI requirements architect.
+
+Your task is to generate only high-value clarification questions that are essential for accurate implementation.
+
+
+Rules:
+- determine whether missing information could materially affect implementation quality
+- mentally evaluate implementation readiness from 1-10 before deciding
+- if readiness is below 8/10, ask clarification questions
+- if readiness is 8+/10, return []
+- ask clarification questions when important behavior, scope, flows, permissions, data handling, responsiveness, or integrations are unclear
+- ask concise implementation-focused questions
+- avoid generic or unnecessary questions
+- avoid asking things already visible in screenshots
+- avoid asking preference-only questions unless implementation-critical
+- group related ambiguities into fewer questions
+- infer only minor visual styling details when safe
+- return [] ONLY when requirements are genuinely implementation-ready
+- ask clarification questions if important feature details are missing even when partial implementation is technically possible
+
+Return ONLY a valid JSON array of question strings.
+Do not include explanations, markdown, numbering, or extra text.
+      `,
           },
           {
             role: "user",
@@ -311,21 +449,37 @@ ${text}`,
           },
         ],
         max_completion_tokens: 400,
-        temperature: 0.2,
+        temperature: 0,
       });
 
       const content = response.choices[0]?.message?.content || "[]";
+
       console.log("📋 Clarification response:", content.substring(0, 100));
+
       try {
-        const parsed = JSON.parse(content);
-        const cqs = Array.isArray(parsed) ? parsed.slice(0, 5) : []; // Limit to 5 max
-        console.log("✅ Detected", cqs.length, "critical clarification questions");
+        const cleanedContent = content
+          .replace(/```json/g, "")
+          .replace(/```/g, "")
+          .trim();
+
+        const parsed = JSON.parse(cleanedContent);
+
+        const cqs = Array.isArray(parsed) ? parsed : [];
+
+        console.log(
+          "✅ Detected",
+          cqs.length,
+          "critical clarification questions",
+        );
+
         setClarifications(cqs);
+
         return cqs;
       } catch {
-        // If JSON parse fails, return empty
-        console.warn("⚠️  Failed to parse clarification JSON");
+        console.warn("⚠️ Failed to parse clarification JSON");
+
         setClarifications([]);
+
         return [];
       }
     } catch (err) {
