@@ -15,7 +15,13 @@ interface RequirementInputPanelProps {
   onFilesChange: (files: File[]) => void;
   files: File[];
   onGenerate: () => void;
-  state: "idle" | "uploading" | "generating" | "clarification-required" | "oversized-warning" | "failed";
+  state:
+    | "idle"
+    | "uploading"
+    | "generating"
+    | "clarification-required"
+    | "oversized-warning"
+    | "failed";
   clarificationQuestions: string[];
   onAnswerClarification: (index: number, answer: string) => void;
 }
@@ -52,9 +58,17 @@ export function RequirementInputPanel({
     // Simulate async processing/upload state
     setUploading(true);
     setTimeout(() => {
-      onFilesChange(allowed);
+      onFilesChange([...files, ...allowed]);
       setUploading(false);
     }, 300);
+
+    const mergedFiles = [...files, ...allowed].filter(
+      (file, index, self) =>
+        index ===
+        self.findIndex((f) => f.name === file.name && f.size === file.size),
+    );
+
+    onFilesChange(mergedFiles);
   };
 
   const handleDrop = (e: React.DragEvent) => {
